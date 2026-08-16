@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+                   xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   id="Definitions_OnlinePurchaseOrder"
+                   targetNamespace="http://bpmn.io/schema/bpmn"
+                   exporter="Claude"
+                   exporterVersion="1.0">
+
+  <bpmn:process id="Process_OnlinePurchaseOrder" name="Online Purchase Order Processing" isExecutable="true">
+
+    <bpmn:startEvent id="StartEvent_OrderPlaced" name="Customer Places Order">
+      <bpmn:outgoing>Flow_StartToCheckAvailability</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Task_CheckProductAvailability" name="Check Product Availability">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="check-product-availability" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_StartToCheckAvailability</bpmn:incoming>
+      <bpmn:outgoing>Flow_CheckAvailabilityToGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_ProductAvailable" name="Product Available?">
+      <bpmn:incoming>Flow_CheckAvailabilityToGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_AvailableToProcessPayment</bpmn:outgoing>
+      <bpmn:outgoing>Flow_UnavailableToNotifyOutOfStock</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Task_NotifyOutOfStock" name="Notify Customer: Out of Stock">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notify-out-of-stock" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_UnavailableToNotifyOutOfStock</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotifyOutOfStockToEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_OutOfStock" name="Order Ended: Out of Stock">
+      <bpmn:incoming>Flow_NotifyOutOfStockToEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:serviceTask id="Task_ProcessPayment" name="Process Payment">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="process-payment" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AvailableToProcessPayment</bpmn:incoming>
+      <bpmn:outgoing>Flow_ProcessPaymentToGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_PaymentSuccessful" name="Payment Successful?">
+      <bpmn:incoming>Flow_ProcessPaymentToGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_SuccessToConfirmOrder</bpmn:outgoing>
+      <bpmn:outgoing>Flow_FailedToNotifyPaymentFailure</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Task_NotifyPaymentFailure" name="Notify Customer: Payment Failure">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notify-payment-failure" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_FailedToNotifyPaymentFailure</bpmn:incoming>
+      <bpmn:outgoing>Flow_NotifyPaymentFailureToEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_PaymentFailed" name="Order Ended: Payment Failed">
+      <bpmn:incoming>Flow_NotifyPaymentFailureToEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:serviceTask id="Task_ConfirmOrder" name="Confirm Order">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="confirm-order" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SuccessToConfirmOrder</bpmn:incoming>
+      <bpmn:outgoing>Flow_ConfirmOrderToPrepareShipment</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_PrepareProductForShipment" name="Prepare Product for Shipment">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="prepare-product-for-shipment" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ConfirmOrderToPrepareShipment</bpmn:incoming>
+      <bpmn:outgoing>Flow_PrepareShipmentToShipOrder</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_ShipOrder" name="Ship Order">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="ship-order" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_PrepareShipmentToShipOrder</bpmn:incoming>
+      <bpmn:outgoing>Flow_ShipOrderToSendConfirmation</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_SendShippingConfirmation" name="Send Shipping Confirmation">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-shipping-confirmation" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ShipOrderToSendConfirmation</bpmn:incoming>
+      <bpmn:outgoing>Flow_SendConfirmationToEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_OrderCompleted" name="Order Completed">
+      <bpmn:incoming>Flow_SendConfirmationToEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_StartToCheckAvailability" sourceRef="StartEvent_OrderPlaced" targetRef="Task_CheckProductAvailability" />
+    <bpmn:sequenceFlow id="Flow_CheckAvailabilityToGateway" sourceRef="Task_CheckProductAvailability" targetRef="Gateway_ProductAvailable" />
+
+    <bpmn:sequenceFlow id="Flow_AvailableToProcessPayment" name="Available" sourceRef="Gateway_ProductAvailable" targetRef="Task_ProcessPayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=productAvailable = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_UnavailableToNotifyOutOfStock" name="Unavailable" sourceRef="Gateway_ProductAvailable" targetRef="Task_NotifyOutOfStock">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=productAvailable = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_NotifyOutOfStockToEnd" sourceRef="Task_NotifyOutOfStock" targetRef="EndEvent_OutOfStock" />
+
+    <bpmn:sequenceFlow id="Flow_ProcessPaymentToGateway" sourceRef="Task_ProcessPayment" targetRef="Gateway_PaymentSuccessful" />
+
+    <bpmn:sequenceFlow id="Flow_SuccessToConfirmOrder" name="Success" sourceRef="Gateway_PaymentSuccessful" targetRef="Task_ConfirmOrder">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=paymentSuccessful = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_FailedToNotifyPaymentFailure" name="Failed" sourceRef="Gateway_PaymentSuccessful" targetRef="Task_NotifyPaymentFailure">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=paymentSuccessful = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_NotifyPaymentFailureToEnd" sourceRef="Task_NotifyPaymentFailure" targetRef="EndEvent_PaymentFailed" />
+
+    <bpmn:sequenceFlow id="Flow_ConfirmOrderToPrepareShipment" sourceRef="Task_ConfirmOrder" targetRef="Task_PrepareProductForShipment" />
+    <bpmn:sequenceFlow id="Flow_PrepareShipmentToShipOrder" sourceRef="Task_PrepareProductForShipment" targetRef="Task_ShipOrder" />
+    <bpmn:sequenceFlow id="Flow_ShipOrderToSendConfirmation" sourceRef="Task_ShipOrder" targetRef="Task_SendShippingConfirmation" />
+    <bpmn:sequenceFlow id="Flow_SendConfirmationToEnd" sourceRef="Task_SendShippingConfirmation" targetRef="EndEvent_OrderCompleted" />
+
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_OnlinePurchaseOrder">
+
+      <bpmndi:BPMNShape id="StartEvent_OrderPlaced_di" bpmnElement="StartEvent_OrderPlaced">
+        <omgdc:Bounds x="152" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="130" y="245" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_CheckProductAvailability_di" bpmnElement="Task_CheckProductAvailability">
+        <omgdc:Bounds x="240" y="180" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gateway_ProductAvailable_di" bpmnElement="Gateway_ProductAvailable" isMarkerVisible="true">
+        <omgdc:Bounds x="395" y="195" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="378" y="252" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_NotifyOutOfStock_di" bpmnElement="Task_NotifyOutOfStock">
+        <omgdc:Bounds x="360" y="340" width="120" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EndEvent_OutOfStock_di" bpmnElement="EndEvent_OutOfStock">
+        <omgdc:Bounds x="542" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="516" y="405" width="90" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_ProcessPayment_di" bpmnElement="Task_ProcessPayment">
+        <omgdc:Bounds x="500" y="180" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gateway_PaymentSuccessful_di" bpmnElement="Gateway_PaymentSuccessful" isMarkerVisible="true">
+        <omgdc:Bounds x="655" y="195" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="638" y="252" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_NotifyPaymentFailure_di" bpmnElement="Task_NotifyPaymentFailure">
+        <omgdc:Bounds x="620" y="340" width="130" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EndEvent_PaymentFailed_di" bpmnElement="EndEvent_PaymentFailed">
+        <omgdc:Bounds x="822" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="796" y="405" width="90" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_ConfirmOrder_di" bpmnElement="Task_ConfirmOrder">
+        <omgdc:Bounds x="760" y="180" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_PrepareProductForShipment_di" bpmnElement="Task_PrepareProductForShipment">
+        <omgdc:Bounds x="910" y="180" width="110" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_ShipOrder_di" bpmnElement="Task_ShipOrder">
+        <omgdc:Bounds x="1070" y="180" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_SendShippingConfirmation_di" bpmnElement="Task_SendShippingConfirmation">
+        <omgdc:Bounds x="1220" y="180" width="120" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EndEvent_OrderCompleted_di" bpmnElement="EndEvent_OrderCompleted">
+        <omgdc:Bounds x="1392" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1370" y="245" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_StartToCheckAvailability_di" bpmnElement="Flow_StartToCheckAvailability">
+        <omgdi:waypoint x="188" y="220" />
+        <omgdi:waypoint x="240" y="220" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_CheckAvailabilityToGateway_di" bpmnElement="Flow_CheckAvailabilityToGateway">
+        <omgdi:waypoint x="340" y="220" />
+        <omgdi:waypoint x="395" y="220" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_AvailableToProcessPayment_di" bpmnElement="Flow_AvailableToProcessPayment">
+        <omgdi:waypoint x="445" y="220" />
+        <omgdi:waypoint x="500" y="220" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="455" y="202" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_UnavailableToNotifyOutOfStock_di" bpmnElement="Flow_UnavailableToNotifyOutOfStock">
+        <omgdi:waypoint x="420" y="245" />
+        <omgdi:waypoint x="420" y="340" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="425" y="290" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_NotifyOutOfStockToEnd_di" bpmnElement="Flow_NotifyOutOfStockToEnd">
+        <omgdi:waypoint x="480" y="380" />
+        <omgdi:waypoint x="542" y="380" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ProcessPaymentToGateway_di" bpmnElement="Flow_ProcessPaymentToGateway">
+        <omgdi:waypoint x="600" y="220" />
+        <omgdi:waypoint x="655" y="220" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_SuccessToConfirmOrder_di" bpmnElement="Flow_SuccessToConfirmOrder">
+        <omgdi:waypoint x="705" y="220" />
+        <omgdi:waypoint x="760" y="220" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="715" y="202" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_FailedToNotifyPaymentFailure_di" bpmnElement="Flow_FailedToNotifyPaymentFailure">
+        <omgdi:waypoint x="680" y="245" />
+        <omgdi:waypoint x="680" y="340" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="686" y="290" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_NotifyPaymentFailureToEnd_di" bpmnElement="Flow_NotifyPaymentFailureToEnd">
+        <omgdi:waypoint x="750" y="380" />
+        <omgdi:waypoint x="822" y="380" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ConfirmOrderToPrepareShipment_di" bpmnElement="Flow_ConfirmOrderToPrepareShipment">
+        <omgdi:waypoint x="860" y="220" />
+        <omgdi:waypoint x="910" y="220" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_PrepareShipmentToShipOrder_di" bpmnElement="Flow_PrepareShipmentToShipOrder">
+        <omgdi:waypoint x="1020" y="220" />
+        <omgdi:waypoint x="1070" y="220" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ShipOrderToSendConfirmation_di" bpmnElement="Flow_ShipOrderToSendConfirmation">
+        <omgdi:waypoint x="1170" y="220" />
+        <omgdi:waypoint x="1220" y="220" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_SendConfirmationToEnd_di" bpmnElement="Flow_SendConfirmationToEnd">
+        <omgdi:waypoint x="1340" y="220" />
+        <omgdi:waypoint x="1392" y="220" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>
