@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+ xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+ xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+ xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+ id="Definitions_HotelRoomReservation" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="HotelRoomReservation" name="Hotel Room Reservation" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Booking Request"/>
+    <bpmn:task id="Task_1" name="Check Room Availability"/>
+    <bpmn:exclusiveGateway id="Gateway_1" name="Rooms Available?" default="Flow_3"/>
+    <bpmn:task id="Task_2" name="Notify Guest: No Rooms Available"/>
+    <bpmn:endEvent id="End_1" name="Reservation Ends"/>
+    <bpmn:task id="Task_3" name="Request Advance / Deposit Payment"/>
+    <bpmn:exclusiveGateway id="Gateway_2" name="Payment Successful?" default="Flow_7"/>
+    <bpmn:task id="Task_4" name="Notify Guest: Payment Failed"/>
+    <bpmn:endEvent id="End_2" name="Reservation Ends"/>
+    <bpmn:task id="Task_5" name="Confirm Booking &amp; Generate Reference"/>
+    <bpmn:task id="Task_6" name="Send Booking Confirmation Email"/>
+    <bpmn:endEvent id="End_3" name="Booking Process Ends"/>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_1"/>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_1" targetRef="Gateway_1"/>
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Gateway_1" targetRef="Task_2" name="No"/>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_2" targetRef="End_1"/>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Gateway_1" targetRef="Task_3" name="Yes"/>
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_3" targetRef="Gateway_2"/>
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Gateway_2" targetRef="Task_4" name="No"/>
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Task_4" targetRef="End_2"/>
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Gateway_2" targetRef="Task_5" name="Yes"/>
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_5" targetRef="Task_6"/>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_6" targetRef="End_3"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_HotelRoomReservation">
+    <bpmndi:BPMNPlane id="BPMNPlane_HotelRoomReservation" bpmnElement="HotelRoomReservation">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="100" y="220" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_1_di" bpmnElement="Task_1">
+        <dc:Bounds x="190" y="210" width="150" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1_di" bpmnElement="Gateway_1">
+        <dc:Bounds x="380" y="215" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_2_di" bpmnElement="Task_2">
+        <dc:Bounds x="500" y="110" width="190" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_1_di" bpmnElement="End_1">
+        <dc:Bounds x="750" y="120" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_3_di" bpmnElement="Task_3">
+        <dc:Bounds x="500" y="280" width="210" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_2_di" bpmnElement="Gateway_2">
+        <dc:Bounds x="760" y="285" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_4_di" bpmnElement="Task_4">
+        <dc:Bounds x="870" y="180" width="190" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_2_di" bpmnElement="End_2">
+        <dc:Bounds x="1120" y="190" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_5_di" bpmnElement="Task_5">
+        <dc:Bounds x="870" y="330" width="220" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_6_di" bpmnElement="Task_6">
+        <dc:Bounds x="1140" y="330" width="210" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_3_di" bpmnElement="End_3">
+        <dc:Bounds x="1400" y="340" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="118.0" y="238.0"/>
+        <di:waypoint x="265.0" y="238.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="265.0" y="238.0"/>
+        <di:waypoint x="405.0" y="240.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="405.0" y="240.0"/>
+        <di:waypoint x="595.0" y="138.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="595.0" y="138.0"/>
+        <di:waypoint x="768.0" y="138.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="405.0" y="240.0"/>
+        <di:waypoint x="605.0" y="308.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="605.0" y="308.0"/>
+        <di:waypoint x="785.0" y="310.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="785.0" y="310.0"/>
+        <di:waypoint x="965.0" y="208.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="965.0" y="208.0"/>
+        <di:waypoint x="1138.0" y="208.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="785.0" y="310.0"/>
+        <di:waypoint x="980.0" y="358.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="980.0" y="358.0"/>
+        <di:waypoint x="1245.0" y="358.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1245.0" y="358.0"/>
+        <di:waypoint x="1418.0" y="358.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
