@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+ xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+ xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+ xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+ id="Definitions_LoanApplicationProcessing" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="LoanApplicationProcessing" name="Loan Application Processing" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_2" name="Loan Application Submitted"/>
+    <bpmn:task id="Task_21" name="Verify Documents &amp; Credit Score"/>
+    <bpmn:exclusiveGateway id="Gateway_21" name="Documents Valid?" default="F23"/>
+    <bpmn:task id="Task_22" name="Reject Application &amp; Notify Customer"/>
+    <bpmn:endEvent id="End_21" name="Process Ends"/>
+    <bpmn:task id="Task_23" name="Check Eligibility: Credit Score &amp; Income"/>
+    <bpmn:exclusiveGateway id="Gateway_22" name="Applicant Eligible?" default="F27"/>
+    <bpmn:task id="Task_24" name="Send Rejection Notification"/>
+    <bpmn:endEvent id="End_22" name="Process Ends"/>
+    <bpmn:task id="Task_25" name="Forward to Loan Officer"/>
+    <bpmn:exclusiveGateway id="Gateway_23" name="Loan Approved?" default="F31"/>
+    <bpmn:task id="Task_26" name="Disburse Loan Amount"/>
+    <bpmn:task id="Task_27" name="Send Approval Notification"/>
+    <bpmn:endEvent id="End_23" name="Process Ends"/>
+    <bpmn:task id="Task_28" name="Send Rejection Notification"/>
+    <bpmn:endEvent id="End_24" name="Process Ends"/>
+    <bpmn:sequenceFlow id="F21" sourceRef="StartEvent_2" targetRef="Task_21"/>
+    <bpmn:sequenceFlow id="F22" sourceRef="Task_21" targetRef="Gateway_21"/>
+    <bpmn:sequenceFlow id="F23" sourceRef="Gateway_21" targetRef="Task_22" name="No"/>
+    <bpmn:sequenceFlow id="F24" sourceRef="Task_22" targetRef="End_21"/>
+    <bpmn:sequenceFlow id="F25" sourceRef="Gateway_21" targetRef="Task_23" name="Yes"/>
+    <bpmn:sequenceFlow id="F26" sourceRef="Task_23" targetRef="Gateway_22"/>
+    <bpmn:sequenceFlow id="F27" sourceRef="Gateway_22" targetRef="Task_24" name="No"/>
+    <bpmn:sequenceFlow id="F28" sourceRef="Task_24" targetRef="End_22"/>
+    <bpmn:sequenceFlow id="F29" sourceRef="Gateway_22" targetRef="Task_25" name="Yes"/>
+    <bpmn:sequenceFlow id="F30" sourceRef="Task_25" targetRef="Gateway_23"/>
+    <bpmn:sequenceFlow id="F31" sourceRef="Gateway_23" targetRef="Task_28" name="No"/>
+    <bpmn:sequenceFlow id="F32" sourceRef="Task_28" targetRef="End_24"/>
+    <bpmn:sequenceFlow id="F33" sourceRef="Gateway_23" targetRef="Task_26" name="Yes"/>
+    <bpmn:sequenceFlow id="F34" sourceRef="Task_26" targetRef="Task_27"/>
+    <bpmn:sequenceFlow id="F35" sourceRef="Task_27" targetRef="End_23"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_LoanApplicationProcessing">
+    <bpmndi:BPMNPlane id="BPMNPlane_LoanApplicationProcessing" bpmnElement="LoanApplicationProcessing">
+      <bpmndi:BPMNShape id="StartEvent_2_di" bpmnElement="StartEvent_2">
+        <dc:Bounds x="80" y="250" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_21_di" bpmnElement="Task_21">
+        <dc:Bounds x="170" y="240" width="200" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_21_di" bpmnElement="Gateway_21">
+        <dc:Bounds x="420" y="245" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_22_di" bpmnElement="Task_22">
+        <dc:Bounds x="520" y="130" width="220" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_21_di" bpmnElement="End_21">
+        <dc:Bounds x="790" y="140" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_23_di" bpmnElement="Task_23">
+        <dc:Bounds x="520" y="300" width="230" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_22_di" bpmnElement="Gateway_22">
+        <dc:Bounds x="800" y="305" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_24_di" bpmnElement="Task_24">
+        <dc:Bounds x="900" y="200" width="190" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_22_di" bpmnElement="End_22">
+        <dc:Bounds x="1130" y="210" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_25_di" bpmnElement="Task_25">
+        <dc:Bounds x="900" y="360" width="190" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_23_di" bpmnElement="Gateway_23">
+        <dc:Bounds x="1140" y="365" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_26_di" bpmnElement="Task_26">
+        <dc:Bounds x="1240" y="300" width="180" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_27_di" bpmnElement="Task_27">
+        <dc:Bounds x="1240" y="410" width="190" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_23_di" bpmnElement="End_23">
+        <dc:Bounds x="1480" y="420" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_28_di" bpmnElement="Task_28">
+        <dc:Bounds x="1240" y="500" width="190" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_24_di" bpmnElement="End_24">
+        <dc:Bounds x="1480" y="510" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F21_di" bpmnElement="F21">
+        <di:waypoint x="98.0" y="268.0"/>
+        <di:waypoint x="270.0" y="268.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F22_di" bpmnElement="F22">
+        <di:waypoint x="270.0" y="268.0"/>
+        <di:waypoint x="445.0" y="270.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F23_di" bpmnElement="F23">
+        <di:waypoint x="445.0" y="270.0"/>
+        <di:waypoint x="630.0" y="158.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F24_di" bpmnElement="F24">
+        <di:waypoint x="630.0" y="158.0"/>
+        <di:waypoint x="808.0" y="158.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F25_di" bpmnElement="F25">
+        <di:waypoint x="445.0" y="270.0"/>
+        <di:waypoint x="635.0" y="328.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F26_di" bpmnElement="F26">
+        <di:waypoint x="635.0" y="328.0"/>
+        <di:waypoint x="825.0" y="330.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F27_di" bpmnElement="F27">
+        <di:waypoint x="825.0" y="330.0"/>
+        <di:waypoint x="995.0" y="228.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F28_di" bpmnElement="F28">
+        <di:waypoint x="995.0" y="228.0"/>
+        <di:waypoint x="1148.0" y="228.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F29_di" bpmnElement="F29">
+        <di:waypoint x="825.0" y="330.0"/>
+        <di:waypoint x="995.0" y="388.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F30_di" bpmnElement="F30">
+        <di:waypoint x="995.0" y="388.0"/>
+        <di:waypoint x="1165.0" y="390.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F31_di" bpmnElement="F31">
+        <di:waypoint x="1165.0" y="390.0"/>
+        <di:waypoint x="1335.0" y="528.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F32_di" bpmnElement="F32">
+        <di:waypoint x="1335.0" y="528.0"/>
+        <di:waypoint x="1498.0" y="528.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F33_di" bpmnElement="F33">
+        <di:waypoint x="1165.0" y="390.0"/>
+        <di:waypoint x="1330.0" y="328.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F34_di" bpmnElement="F34">
+        <di:waypoint x="1330.0" y="328.0"/>
+        <di:waypoint x="1335.0" y="438.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F35_di" bpmnElement="F35">
+        <di:waypoint x="1335.0" y="438.0"/>
+        <di:waypoint x="1498.0" y="438.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

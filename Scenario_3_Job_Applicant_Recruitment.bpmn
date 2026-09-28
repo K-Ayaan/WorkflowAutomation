@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+ xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+ xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+ xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+ id="Definitions_JobApplicantRecruitment" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="JobApplicantRecruitment" name="Job Applicant Recruitment Process" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_3" name="Job Application Submitted"/>
+    <bpmn:task id="Task_31" name="Screen Application Against Eligibility Criteria"/>
+    <bpmn:exclusiveGateway id="Gateway_31" name="Meets Eligibility Criteria?" default="G33"/>
+    <bpmn:task id="Task_32" name="Send Rejection Notification"/>
+    <bpmn:endEvent id="End_31" name="Process Ends"/>
+    <bpmn:task id="Task_33" name="Schedule Technical Interview"/>
+    <bpmn:task id="Task_34" name="Evaluate Technical Interview"/>
+    <bpmn:exclusiveGateway id="Gateway_32" name="Technical Interview Passed?" default="G38"/>
+    <bpmn:task id="Task_35" name="Send Rejection Notification"/>
+    <bpmn:endEvent id="End_32" name="Process Ends"/>
+    <bpmn:task id="Task_36" name="Schedule HR / Managerial Round"/>
+    <bpmn:exclusiveGateway id="Gateway_33" name="Selected in HR Round?" default="G42"/>
+    <bpmn:task id="Task_37" name="Send Rejection Notification"/>
+    <bpmn:endEvent id="End_33" name="Process Ends"/>
+    <bpmn:task id="Task_38" name="Generate Offer Letter"/>
+    <bpmn:task id="Task_39" name="Send Offer Letter to Candidate"/>
+    <bpmn:endEvent id="End_34" name="Process Ends"/>
+    <bpmn:sequenceFlow id="G31" sourceRef="StartEvent_3" targetRef="Task_31"/>
+    <bpmn:sequenceFlow id="G32" sourceRef="Task_31" targetRef="Gateway_31"/>
+    <bpmn:sequenceFlow id="G33" sourceRef="Gateway_31" targetRef="Task_32" name="No"/>
+    <bpmn:sequenceFlow id="G34" sourceRef="Task_32" targetRef="End_31"/>
+    <bpmn:sequenceFlow id="G35" sourceRef="Gateway_31" targetRef="Task_33" name="Yes"/>
+    <bpmn:sequenceFlow id="G36" sourceRef="Task_33" targetRef="Task_34"/>
+    <bpmn:sequenceFlow id="G37" sourceRef="Task_34" targetRef="Gateway_32"/>
+    <bpmn:sequenceFlow id="G38" sourceRef="Gateway_32" targetRef="Task_35" name="No"/>
+    <bpmn:sequenceFlow id="G39" sourceRef="Task_35" targetRef="End_32"/>
+    <bpmn:sequenceFlow id="G40" sourceRef="Gateway_32" targetRef="Task_36" name="Yes"/>
+    <bpmn:sequenceFlow id="G41" sourceRef="Task_36" targetRef="Gateway_33"/>
+    <bpmn:sequenceFlow id="G42" sourceRef="Gateway_33" targetRef="Task_37" name="No"/>
+    <bpmn:sequenceFlow id="G43" sourceRef="Task_37" targetRef="End_33"/>
+    <bpmn:sequenceFlow id="G44" sourceRef="Gateway_33" targetRef="Task_38" name="Yes"/>
+    <bpmn:sequenceFlow id="G45" sourceRef="Task_38" targetRef="Task_39"/>
+    <bpmn:sequenceFlow id="G46" sourceRef="Task_39" targetRef="End_34"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_JobApplicantRecruitment">
+    <bpmndi:BPMNPlane id="BPMNPlane_JobApplicantRecruitment" bpmnElement="JobApplicantRecruitment">
+      <bpmndi:BPMNShape id="StartEvent_3_di" bpmnElement="StartEvent_3">
+        <dc:Bounds x="70" y="280" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_31_di" bpmnElement="Task_31">
+        <dc:Bounds x="160" y="270" width="240" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_31_di" bpmnElement="Gateway_31">
+        <dc:Bounds x="450" y="275" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_32_di" bpmnElement="Task_32">
+        <dc:Bounds x="550" y="150" width="190" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_31_di" bpmnElement="End_31">
+        <dc:Bounds x="780" y="160" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_33_di" bpmnElement="Task_33">
+        <dc:Bounds x="550" y="300" width="200" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_34_di" bpmnElement="Task_34">
+        <dc:Bounds x="800" y="300" width="200" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_32_di" bpmnElement="Gateway_32">
+        <dc:Bounds x="1040" y="305" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_35_di" bpmnElement="Task_35">
+        <dc:Bounds x="1140" y="190" width="190" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_32_di" bpmnElement="End_32">
+        <dc:Bounds x="1370" y="200" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_36_di" bpmnElement="Task_36">
+        <dc:Bounds x="1140" y="340" width="220" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_33_di" bpmnElement="Gateway_33">
+        <dc:Bounds x="1400" y="345" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_37_di" bpmnElement="Task_37">
+        <dc:Bounds x="1500" y="230" width="190" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_33_di" bpmnElement="End_33">
+        <dc:Bounds x="1740" y="240" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_38_di" bpmnElement="Task_38">
+        <dc:Bounds x="1500" y="390" width="190" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_39_di" bpmnElement="Task_39">
+        <dc:Bounds x="1740" y="390" width="210" height="56"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_34_di" bpmnElement="End_34">
+        <dc:Bounds x="1990" y="400" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="G31_di" bpmnElement="G31">
+        <di:waypoint x="88.0" y="298.0"/>
+        <di:waypoint x="280.0" y="298.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G32_di" bpmnElement="G32">
+        <di:waypoint x="280.0" y="298.0"/>
+        <di:waypoint x="475.0" y="300.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G33_di" bpmnElement="G33">
+        <di:waypoint x="475.0" y="300.0"/>
+        <di:waypoint x="645.0" y="178.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G34_di" bpmnElement="G34">
+        <di:waypoint x="645.0" y="178.0"/>
+        <di:waypoint x="798.0" y="178.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G35_di" bpmnElement="G35">
+        <di:waypoint x="475.0" y="300.0"/>
+        <di:waypoint x="650.0" y="328.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G36_di" bpmnElement="G36">
+        <di:waypoint x="650.0" y="328.0"/>
+        <di:waypoint x="900.0" y="328.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G37_di" bpmnElement="G37">
+        <di:waypoint x="900.0" y="328.0"/>
+        <di:waypoint x="1065.0" y="330.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G38_di" bpmnElement="G38">
+        <di:waypoint x="1065.0" y="330.0"/>
+        <di:waypoint x="1235.0" y="218.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G39_di" bpmnElement="G39">
+        <di:waypoint x="1235.0" y="218.0"/>
+        <di:waypoint x="1388.0" y="218.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G40_di" bpmnElement="G40">
+        <di:waypoint x="1065.0" y="330.0"/>
+        <di:waypoint x="1250.0" y="368.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G41_di" bpmnElement="G41">
+        <di:waypoint x="1250.0" y="368.0"/>
+        <di:waypoint x="1425.0" y="370.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G42_di" bpmnElement="G42">
+        <di:waypoint x="1425.0" y="370.0"/>
+        <di:waypoint x="1595.0" y="258.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G43_di" bpmnElement="G43">
+        <di:waypoint x="1595.0" y="258.0"/>
+        <di:waypoint x="1758.0" y="258.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G44_di" bpmnElement="G44">
+        <di:waypoint x="1425.0" y="370.0"/>
+        <di:waypoint x="1595.0" y="418.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G45_di" bpmnElement="G45">
+        <di:waypoint x="1595.0" y="418.0"/>
+        <di:waypoint x="1845.0" y="418.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G46_di" bpmnElement="G46">
+        <di:waypoint x="1845.0" y="418.0"/>
+        <di:waypoint x="2008.0" y="418.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
