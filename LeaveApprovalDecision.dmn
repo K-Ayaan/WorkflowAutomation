@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+ xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+ xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+ xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+ id="Definitions_LeaveApproval"
+ name="Leave Approval Decisions"
+ namespace="http://xyzcorp.example/dmn"
+ exporter="Camunda Modeler"
+ exporterVersion="5.0.0">
+
+  <decision id="LeaveApprovalDecision" name="Leave Approval Decision">
+    <decisionTable id="LeaveApprovalDecisionTable" hitPolicy="FIRST">
+      <input id="Input_LeaveType" label="Leave Type">
+        <inputExpression id="Expr_LeaveType" typeRef="string"><text>leaveType</text></inputExpression>
+      </input>
+      <input id="Input_Days" label="Number of Days">
+        <inputExpression id="Expr_Days" typeRef="number"><text>days</text></inputExpression>
+      </input>
+      <input id="Input_Balance" label="Available Leave Balance">
+        <inputExpression id="Expr_Balance" typeRef="number"><text>availableBalance</text></inputExpression>
+      </input>
+      <output id="Output_Decision" name="decision" typeRef="string"/>
+      <output id="Output_Message" name="message" typeRef="string"/>
+
+      <rule id="Rule_InsufficientBalance">
+        <inputEntry id="IE1"><text>&gt;</text></inputEntry>
+        <inputEntry id="IE2"><text>-</text></inputEntry>
+        <inputEntry id="IE3"><text>&lt; days</text></inputEntry>
+        <outputEntry id="OE1"><text>"INSUFFICIENT_BALANCE"</text></outputEntry>
+        <outputEntry id="OE2"><text>"Insufficient Balance"</text></outputEntry>
+      </rule>
+
+      <rule id="Rule_SickAuto">
+        <inputEntry id="IE4"><text>"Sick"</text></inputEntry>
+        <inputEntry id="IE5"><text>&lt;= 3</text></inputEntry>
+        <inputEntry id="IE6"><text>&gt;= days</text></inputEntry>
+        <outputEntry id="OE3"><text>"AUTO_APPROVE"</text></outputEntry>
+        <outputEntry id="OE4"><text>"Auto-approved Sick Leave"</text></outputEntry>
+      </rule>
+
+      <rule id="Rule_ManagerReviewCasual">
+        <inputEntry id="IE7"><text>"Casual"</text></inputEntry>
+        <inputEntry id="IE8"><text>-</text></inputEntry>
+        <inputEntry id="IE9"><text>&gt;= days</text></inputEntry>
+        <outputEntry id="OE5"><text>"MANAGER_REVIEW"</text></outputEntry>
+        <outputEntry id="OE6"><text>"Manager approval required"</text></outputEntry>
+      </rule>
+
+      <rule id="Rule_ManagerReviewEarned">
+        <inputEntry id="IE10"><text>"Earned"</text></inputEntry>
+        <inputEntry id="IE11"><text>-</text></inputEntry>
+        <inputEntry id="IE12"><text>&gt;= days</text></inputEntry>
+        <outputEntry id="OE7"><text>"MANAGER_REVIEW"</text></outputEntry>
+        <outputEntry id="OE8"><text>"Manager approval required"</text></outputEntry>
+      </rule>
+
+      <rule id="Rule_ManagerReviewSickOver3">
+        <inputEntry id="IE13"><text>"Sick"</text></inputEntry>
+        <inputEntry id="IE14"><text>&gt; 3</text></inputEntry>
+        <inputEntry id="IE15"><text>&gt;= days</text></inputEntry>
+        <outputEntry id="OE9"><text>"MANAGER_REVIEW"</text></outputEntry>
+        <outputEntry id="OE10"><text>"Manager approval required"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_LeaveApproval">
+      <dmndi:DMNShape dmnElementRef="LeaveApprovalDecision" isCollapsed="false">
+        <dc:Bounds x="160" y="100" width="240" height="120"/>
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>
