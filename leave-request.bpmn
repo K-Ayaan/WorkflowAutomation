@@ -1,0 +1,49 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+  id="Definitions_LeaveRequest"
+  targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process
+    id="Process_LeaveRequest"
+    name="Student Leave Request"
+    isExecutable="true">
+
+    <bpmn:startEvent id="StartEvent_1" name="Start">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:sequenceFlow
+      id="Flow_1"
+      sourceRef="StartEvent_1"
+      targetRef="Task_SubmitLeave"/>
+
+    <bpmn:userTask
+      id="Task_SubmitLeave"
+      name="Submit Leave Request">
+
+      <bpmn:extensionElements>
+        <zeebe:formDefinition
+          formId="leave-request-form"/>
+      </bpmn:extensionElements>
+
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow
+      id="Flow_2"
+      sourceRef="Task_SubmitLeave"
+      targetRef="EndEvent_1"/>
+
+    <bpmn:endEvent id="EndEvent_1" name="Request Submitted">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+    </bpmn:endEvent>
+
+  </bpmn:process>
+</bpmn:definitions>
