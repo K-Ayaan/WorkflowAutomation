@@ -1,0 +1,14 @@
+# Paste the four values from Console -> cluster -> API -> client -> Spring Boot tab.
+# Never commit real secrets; prefer the CAMUNDA_* environment variables.
+server:
+  port: 8081   # 8080 is taken by Docker Desktop on this machine
+
+camunda:
+  client:
+    mode: saas
+    auth:
+      client-id: ${CAMUNDA_CLIENT_ID:<id>}
+      client-secret: ${CAMUNDA_CLIENT_SECRET:<secret>}
+    cloud:
+      cluster-id: ${CAMUNDA_CLUSTER_ID:<cluster-id>}
+      region: ${CAMUNDA_CLUSTER_REGION:<region>}
