@@ -1,0 +1,1002 @@
+{
+  "info": {
+    "name": "Exercise 8 – Hospital appointment booking (Camunda 8)",
+    "description": "Deploys send-notification, slot_decision, hospital-booking and hospital-booking-propagate-all to a local Camunda 8.10 orchestration cluster, runs the three required test cases plus the propagation comparison, and verifies the results through the v2 REST API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8088"
+    },
+    {
+      "key": "telegramMockUrl",
+      "value": "http://localhost:8090"
+    }
+  ],
+  "item": [
+    {
+      "name": "0 Setup",
+      "item": [
+        {
+          "name": "Cluster topology",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v2/topology",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "topology"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        pm.test('broker healthy', () => {\r",
+                  "          pm.response.to.have.status(200);\r",
+                  "          pm.expect(pm.response.json().brokers[0].partitions[0].health).to.eql('healthy');\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deploy BPMN + DMN",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v2/deployments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "deployments"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "resources",
+                  "type": "file",
+                  "src": "bpmn/send-notification.bpmn"
+                },
+                {
+                  "key": "resources",
+                  "type": "file",
+                  "src": "dmn/slot_decision.dmn"
+                },
+                {
+                  "key": "resources",
+                  "type": "file",
+                  "src": "bpmn/hospital-booking.bpmn"
+                },
+                {
+                  "key": "resources",
+                  "type": "file",
+                  "src": "bpmn/hospital-booking-propagate-all.bpmn"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        pm.test('deployed 3 processes and 1 decision', () => {\r",
+                  "          pm.response.to.have.status(200);\r",
+                  "          const d = pm.response.json().deployments;\r",
+                  "          const ids = d.map((x) => (x.processDefinition || x.decisionDefinition || {}).processDefinitionId || (x.decisionDefinition || {}).decisionDefinitionId).filter(Boolean);\r",
+                  "          pm.expect(ids).to.include.members(['send-notification', 'slot_decision', 'hospital-booking', 'hospital-booking-propagate-all']);\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 Case – Cardiology bookedCount 3 (booking succeeds)",
+      "item": [
+        {
+          "name": "Start booking P-1001",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/process-instances",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "process-instances"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"processDefinitionId\": \"hospital-booking\",\n  \"variables\": {\n    \"patientId\": \"P-1001\",\n    \"patientName\": \"Asha Verma\",\n    \"department\": \"Cardiology\",\n    \"preferredSlot\": \"2026-11-03 10:30\",\n    \"bookedCount\": 3,\n    \"appointmentWaitTime\": \"PT20S\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('instance created', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('case1Key', pm.response.json().processInstanceKey);",
+                  "console.log('case1Key =', pm.response.json().processInstanceKey);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 Case – Cardiology bookedCount 12 (slot full)",
+      "item": [
+        {
+          "name": "Start booking P-1002",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/process-instances",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "process-instances"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"processDefinitionId\": \"hospital-booking\",\n  \"variables\": {\n    \"patientId\": \"P-1002\",\n    \"patientName\": \"Rahul Mehta\",\n    \"department\": \"Cardiology\",\n    \"preferredSlot\": \"2026-11-03 11:00\",\n    \"bookedCount\": 12\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('instance created', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('case2Key', pm.response.json().processInstanceKey);",
+                  "console.log('case2Key =', pm.response.json().processInstanceKey);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 Case – booking then cancellation",
+      "item": [
+        {
+          "name": "Start booking P-1003",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/process-instances",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "process-instances"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"processDefinitionId\": \"hospital-booking\",\n  \"variables\": {\n    \"patientId\": \"P-1003\",\n    \"patientName\": \"Neha Kapoor\",\n    \"department\": \"Cardiology\",\n    \"preferredSlot\": \"2026-11-04 09:00\",\n    \"bookedCount\": 5,\n    \"appointmentWaitTime\": \"PT1H\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('instance created', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('case3Key', pm.response.json().processInstanceKey);",
+                  "console.log('case3Key =', pm.response.json().processInstanceKey);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Booking is waiting for the appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/element-instances/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "element-instances",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"processInstanceKey\": \"{{case3Key}}\",\n    \"elementId\": \"Timer_WaitForAppointment\",\n    \"state\": \"ACTIVE\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(() => {}, 8000);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        pm.test('slot booked, confirmation sent, timer active', () => {\r",
+                  "          pm.response.to.have.status(200);\r",
+                  "          pm.expect(pm.response.json().items.length).to.eql(1);\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patient sends cancellation (message)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/messages/correlation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "messages",
+                "correlation"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"booking-cancellation\",\n  \"correlationKey\": \"P-1003\",\n  \"variables\": {\n    \"cancellationReason\": \"Patient is travelling that week\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        pm.test('correlated to the case 3 instance', () => {\r",
+                  "          pm.response.to.have.status(200);\r",
+                  "          pm.expect(String(pm.response.json().processInstanceKey)).to.eql(pm.collectionVariables.get('case3Key'));\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 Propagation comparison",
+      "item": [
+        {
+          "name": "Start booking P-1004 (propagate ALL variables)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/process-instances",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "process-instances"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"processDefinitionId\": \"hospital-booking-propagate-all\",\n  \"variables\": {\n    \"patientId\": \"P-1004\",\n    \"patientName\": \"Vikram Singh\",\n    \"department\": \"Neurology\",\n    \"preferredSlot\": \"2026-11-05 14:00\",\n    \"bookedCount\": 2,\n    \"appointmentWaitTime\": \"PT20S\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('instance created', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('propAllKey', pm.response.json().processInstanceKey);",
+                  "console.log('propAllKey =', pm.response.json().processInstanceKey);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 Verify results",
+      "item": [
+        {
+          "name": "Case 1 parent completed via booking path",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/variables/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "variables",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"processInstanceKey\": \"{{case1Key}}\",\n    \"scopeKey\": \"{{case1Key}}\"\n  },\n  \"page\": {\n    \"limit\": 100\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(() => {}, 30000);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        const v = Object.fromEntries(pm.response.json().items.map((i) => [i.name, JSON.parse(i.value)]));\r",
+                  "        pm.test('slotStatus AVAILABLE, BOOKED, confirmation SENT', () => {\r",
+                  "          pm.expect(v.slotStatus).to.eql('AVAILABLE');\r",
+                  "          pm.expect(v.bookingStatus).to.eql('BOOKED');\r",
+                  "          pm.expect(v.bookingRef).to.eql('APT-CARD-P-1001');\r",
+                  "          pm.expect(v.bookedCount).to.eql(4);\r",
+                  "          pm.expect(v.confirmationStatus).to.eql('SENT');\r",
+                  "        });\r",
+                  "        pm.test('child-only variables did not leak into the parent', () => {\r",
+                  "          pm.expect(v).to.not.have.property('recipientId');\r",
+                  "          pm.expect(v).to.not.have.property('messageText');\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Case 1 parent state",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v2/process-instances/{{case1Key}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "process-instances",
+                "{{case1Key}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        pm.test('COMPLETED', () => pm.expect(pm.response.json().state).to.eql('COMPLETED'));\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Case 1 child instance (called by Send confirmation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/process-instances/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "process-instances",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"parentProcessInstanceKey\": \"{{case1Key}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        const items = pm.response.json().items;\r",
+                  "        pm.test('one completed send-notification child', () => {\r",
+                  "          pm.expect(items.length).to.eql(1);\r",
+                  "          pm.expect(items[0].processDefinitionId).to.eql('send-notification');\r",
+                  "          pm.expect(items[0].state).to.eql('COMPLETED');\r",
+                  "        });\r",
+                  "        pm.collectionVariables.set('case1ChildKey', items[0].processInstanceKey);\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Case 1 child variables (propagation OFF)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/variables/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "variables",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"processInstanceKey\": \"{{case1ChildKey}}\",\n    \"scopeKey\": \"{{case1ChildKey}}\"\n  },\n  \"page\": {\n    \"limit\": 100\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        const names = pm.response.json().items.map((i) => i.name).sort();\r",
+                  "        console.log('child variables (propagation OFF):', names.join(', '));\r",
+                  "        pm.test('child only sees recipientId + messageText (plus its own result)', () => {\r",
+                  "          pm.expect(names).to.eql(['messageText', 'notificationStatus', 'recipientId', 'telegramMessageId']);\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Case 2 parent took the FULL path",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/variables/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "variables",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"processInstanceKey\": \"{{case2Key}}\",\n    \"scopeKey\": \"{{case2Key}}\"\n  },\n  \"page\": {\n    \"limit\": 100\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        const v = Object.fromEntries(pm.response.json().items.map((i) => [i.name, JSON.parse(i.value)]));\r",
+                  "        pm.test('slotStatus FULL, slot-full notice SENT, nothing booked', () => {\r",
+                  "          pm.expect(v.slotStatus).to.eql('FULL');\r",
+                  "          pm.expect(v.slotFullNoticeStatus).to.eql('SENT');\r",
+                  "          pm.expect(v).to.not.have.property('bookingRef');\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Case 2 FULL end event reached",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/element-instances/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "element-instances",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"processInstanceKey\": \"{{case2Key}}\",\n    \"elementId\": \"EndEvent_BookingRejected\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        pm.test('Booking rejected (slot full) completed', () => pm.expect(pm.response.json().items.length).to.eql(1));\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Case 3 cancellation path",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/variables/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "variables",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"processInstanceKey\": \"{{case3Key}}\",\n    \"scopeKey\": \"{{case3Key}}\"\n  },\n  \"page\": {\n    \"limit\": 100\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        const v = Object.fromEntries(pm.response.json().items.map((i) => [i.name, JSON.parse(i.value)]));\r",
+                  "        pm.test('slot released, cancellation notice SENT', () => {\r",
+                  "          pm.expect(v.bookingStatus).to.eql('CANCELLED');\r",
+                  "          pm.expect(v.slotReleased).to.eql(true);\r",
+                  "          pm.expect(v.bookedCount).to.eql(5);\r",
+                  "          pm.expect(v.confirmationStatus).to.eql('SENT');\r",
+                  "          pm.expect(v.cancellationNoticeStatus).to.eql('SENT');\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Case 3 has two children (confirmation + cancellation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/process-instances/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "process-instances",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"parentProcessInstanceKey\": \"{{case3Key}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        pm.test('2 send-notification children', () => pm.expect(pm.response.json().items.length).to.eql(2));\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Case 3 timer was interrupted",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/element-instances/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "element-instances",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"processInstanceKey\": \"{{case3Key}}\",\n    \"elementId\": \"Timer_WaitForAppointment\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        pm.test('timer TERMINATED by interrupting event subprocess', () => pm.expect(pm.response.json().items[0].state).to.eql('TERMINATED'));\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Propagate-all child instance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/process-instances/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "process-instances",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"parentProcessInstanceKey\": \"{{propAllKey}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        pm.collectionVariables.set('propAllChildKey', pm.response.json().items[0].processInstanceKey);\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Propagate-all child variables (propagation ON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/variables/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "variables",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"processInstanceKey\": \"{{propAllChildKey}}\",\n    \"scopeKey\": \"{{propAllChildKey}}\"\n  },\n  \"page\": {\n    \"limit\": 100\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        const names = pm.response.json().items.map((i) => i.name).sort();\r",
+                  "        console.log('child variables (propagation ON):', names.join(', '));\r",
+                  "        pm.test('child received every parent variable', () => {\r",
+                  "          pm.expect(names).to.include.members(['patientName', 'department', 'bookedCount', 'slotStatus', 'bookingRef', 'recipientId', 'messageText']);\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Propagate-all parent got child variables back",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/variables/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "variables",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": {\n    \"processInstanceKey\": \"{{propAllKey}}\",\n    \"scopeKey\": \"{{propAllKey}}\"\n  },\n  \"page\": {\n    \"limit\": 100\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        const names = pm.response.json().items.map((i) => i.name);\r",
+                  "        pm.test('child result variables were copied back into the parent', () => {\r",
+                  "          pm.expect(names).to.include.members(['notificationStatus', 'telegramMessageId']);\r",
+                  "          pm.expect(names).to.not.include('confirmationStatus');\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Telegram inbox received every notification",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{telegramMockUrl}}/messages",
+              "host": [
+                "{{telegramMockUrl}}"
+              ],
+              "path": [
+                "messages"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "        const msgs = pm.response.json();\r",
+                  "        pm.test('confirmation, slot-full, confirmation + cancellation, propagate-all confirmation', () => {\r",
+                  "          const byChat = (id) => msgs.filter((m) => m.chat_id === id).map((m) => m.text);\r",
+                  "          pm.expect(byChat('P-1001')[0]).to.include('is confirmed');\r",
+                  "          pm.expect(byChat('P-1002')[0]).to.include('is full');\r",
+                  "          pm.expect(byChat('P-1003').length).to.eql(2);\r",
+                  "          pm.expect(byChat('P-1003')[1]).to.include('has been cancelled');\r",
+                  "          pm.expect(byChat('P-1004')[0]).to.include('is confirmed');\r",
+                  "        });\r"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

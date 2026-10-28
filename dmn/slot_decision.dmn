@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_SlotDecision" name="Slot decision" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.40.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.10.0">
+  <decision id="slot_decision" name="Slot decision">
+    <decisionTable id="DecisionTable_SlotDecision" hitPolicy="UNIQUE">
+      <input id="Input_Department" label="Department">
+        <inputExpression id="InputExpression_Department" typeRef="string">
+          <text>department</text>
+        </inputExpression>
+      </input>
+      <input id="Input_BookedCount" label="Booked count">
+        <inputExpression id="InputExpression_BookedCount" typeRef="number">
+          <text>bookedCount</text>
+        </inputExpression>
+      </input>
+      <output id="Output_SlotStatus" label="Slot status" name="slotStatus" typeRef="string">
+        <outputValues id="UnaryTests_SlotStatusValues">
+          <text>"AVAILABLE","FULL"</text>
+        </outputValues>
+      </output>
+      <output id="Output_SuggestedAction" label="Suggested action" name="suggestedAction" typeRef="string" />
+      <rule id="Rule_CardiologyFull">
+        <description>Cardiology has 10 slots per session</description>
+        <inputEntry id="UnaryTests_R1_Dept"><text>"Cardiology"</text></inputEntry>
+        <inputEntry id="UnaryTests_R1_Count"><text>&gt;= 10</text></inputEntry>
+        <outputEntry id="Expr_R1_Status"><text>"FULL"</text></outputEntry>
+        <outputEntry id="Expr_R1_Action"><text>"Offer the next free Cardiology session or add the patient to the waiting list"</text></outputEntry>
+      </rule>
+      <rule id="Rule_CardiologyAvailable">
+        <inputEntry id="UnaryTests_R2_Dept"><text>"Cardiology"</text></inputEntry>
+        <inputEntry id="UnaryTests_R2_Count"><text>&lt; 10</text></inputEntry>
+        <outputEntry id="Expr_R2_Status"><text>"AVAILABLE"</text></outputEntry>
+        <outputEntry id="Expr_R2_Action"><text>"Book the requested Cardiology slot"</text></outputEntry>
+      </rule>
+      <rule id="Rule_NeurologyFull">
+        <description>Neurology has 8 slots per session</description>
+        <inputEntry id="UnaryTests_R3_Dept"><text>"Neurology"</text></inputEntry>
+        <inputEntry id="UnaryTests_R3_Count"><text>&gt;= 8</text></inputEntry>
+        <outputEntry id="Expr_R3_Status"><text>"FULL"</text></outputEntry>
+        <outputEntry id="Expr_R3_Action"><text>"Offer the next free Neurology session or add the patient to the waiting list"</text></outputEntry>
+      </rule>
+      <rule id="Rule_NeurologyAvailable">
+        <inputEntry id="UnaryTests_R4_Dept"><text>"Neurology"</text></inputEntry>
+        <inputEntry id="UnaryTests_R4_Count"><text>&lt; 8</text></inputEntry>
+        <outputEntry id="Expr_R4_Status"><text>"AVAILABLE"</text></outputEntry>
+        <outputEntry id="Expr_R4_Action"><text>"Book the requested Neurology slot"</text></outputEntry>
+      </rule>
+      <rule id="Rule_OrthopedicsFull">
+        <description>Orthopedics has 12 slots per session</description>
+        <inputEntry id="UnaryTests_R5_Dept"><text>"Orthopedics"</text></inputEntry>
+        <inputEntry id="UnaryTests_R5_Count"><text>&gt;= 12</text></inputEntry>
+        <outputEntry id="Expr_R5_Status"><text>"FULL"</text></outputEntry>
+        <outputEntry id="Expr_R5_Action"><text>"Offer the next free Orthopedics session or add the patient to the waiting list"</text></outputEntry>
+      </rule>
+      <rule id="Rule_OrthopedicsAvailable">
+        <inputEntry id="UnaryTests_R6_Dept"><text>"Orthopedics"</text></inputEntry>
+        <inputEntry id="UnaryTests_R6_Count"><text>&lt; 12</text></inputEntry>
+        <outputEntry id="Expr_R6_Status"><text>"AVAILABLE"</text></outputEntry>
+        <outputEntry id="Expr_R6_Action"><text>"Book the requested Orthopedics slot"</text></outputEntry>
+      </rule>
+      <rule id="Rule_OtherFull">
+        <description>Every other department (General OPD etc.) has 15 slots per session</description>
+        <inputEntry id="UnaryTests_R7_Dept"><text>not("Cardiology","Neurology","Orthopedics")</text></inputEntry>
+        <inputEntry id="UnaryTests_R7_Count"><text>&gt;= 15</text></inputEntry>
+        <outputEntry id="Expr_R7_Status"><text>"FULL"</text></outputEntry>
+        <outputEntry id="Expr_R7_Action"><text>"Offer the next free session in the same department"</text></outputEntry>
+      </rule>
+      <rule id="Rule_OtherAvailable">
+        <inputEntry id="UnaryTests_R8_Dept"><text>not("Cardiology","Neurology","Orthopedics")</text></inputEntry>
+        <inputEntry id="UnaryTests_R8_Count"><text>&lt; 15</text></inputEntry>
+        <outputEntry id="Expr_R8_Status"><text>"AVAILABLE"</text></outputEntry>
+        <outputEntry id="Expr_R8_Action"><text>"Book the requested slot"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_SlotDecision">
+      <dmndi:DMNShape id="DMNShape_SlotDecision" dmnElementRef="slot_decision">
+        <dc:Bounds height="80" width="180" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

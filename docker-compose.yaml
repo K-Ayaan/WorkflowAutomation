@@ -1,0 +1,57 @@
+# Exercise 8 – Hospital appointment booking on Camunda 8.10 (self-managed, Docker).
+# Runs on its own ports so it does not clash with any other local Camunda (e.g. one already on 8080).
+#   docker compose up -d
+#   Operate   http://localhost:8088/operate   (demo / demo)
+#   REST API  http://localhost:8088/v2
+#   Telegram mock inbox  http://localhost:8090
+services:
+  camunda:
+    image: camunda/camunda:8.10.5
+    container_name: hospital-camunda
+    ports:
+      - "8088:8080"    # web apps (Operate/Tasklist/Admin) + Orchestration Cluster REST API
+      - "26501:26500"  # Zeebe gRPC (Desktop Modeler deploys: http://localhost:26501)
+      - "9601:9600"    # management / health
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/usr/local/camunda/config/hospital/application.yaml
+    volumes:
+      - ./config/application.yaml:/usr/local/camunda/config/hospital/application.yaml:ro
+      - camunda-data:/usr/local/camunda/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9600/actuator/health/status | grep -q UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # Executes the REST Outbound Connector task (io.camunda:http-json:1) of send-notification.
+  connectors:
+    image: camunda/connectors-bundle:8.10.2
+    container_name: hospital-connectors
+    depends_on:
+      camunda:
+        condition: service_healthy
+    ports:
+      - "8086:8080"
+    environment:
+      CAMUNDA_CLIENT_MODE: self-managed
+      CAMUNDA_CLIENT_AUTH_METHOD: none
+      CAMUNDA_CLIENT_GRPCADDRESS: http://camunda:26500
+      CAMUNDA_CLIENT_RESTADDRESS: http://camunda:8080
+      # Connector secrets: {{secrets.NAME}} in the BPMN resolves to env var SECRET_NAME (8.10 default prefix)
+      SECRET_TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-mock-token}
+      SECRET_TELEGRAM_API_BASE: ${TELEGRAM_API_BASE:-http://telegram-mock:8081}
+
+  # Minimal stand-in for https://api.telegram.org so the exercise runs without a real bot.
+  # Set TELEGRAM_API_BASE=https://api.telegram.org and a real TELEGRAM_BOT_TOKEN in .env to use Telegram.
+  telegram-mock:
+    image: node:22-alpine
+    container_name: hospital-telegram-mock
+    command: ["node", "/app/server.js"]
+    volumes:
+      - ./telegram-mock:/app:ro
+    ports:
+      - "8090:8081"
+
+volumes:
+  camunda-data:

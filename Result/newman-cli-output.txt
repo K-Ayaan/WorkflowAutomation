@@ -1,0 +1,139 @@
+(node:22856) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Exercise 8 – Hospital appointment booking (Camunda 8)
+
+□ 0 Setup
+└ Cluster topology
+  GET http://localhost:8088/v2/topology [200 OK, 2.32kB, 151ms]
+  √  broker healthy
+
+└ Deploy BPMN + DMN
+  POST http://localhost:8088/v2/deployments (node:22856) [DEP0044] DeprecationWarning: The `util.isArray` API is deprecated. Please use `Array.isArray()` instead.
+[200 OK, 3.58kB, 1106ms]
+  √  deployed 3 processes and 1 decision
+
+□ 1 Case – Cardiology bookedCount 3 (booking succeeds)
+└ Start booking P-1001
+  POST http://localhost:8088/v2/process-instances [200 OK, 2.19kB, 487ms]
+  √  instance created
+  ┌
+  │ 'case1Key =', '2251799813685377'
+  └
+
+□ 2 Case – Cardiology bookedCount 12 (slot full)
+└ Start booking P-1002
+  POST http://localhost:8088/v2/process-instances [200 OK, 2.19kB, 130ms]
+  √  instance created
+  ┌
+  │ 'case2Key =', '2251799813685469'
+  └
+
+□ 3 Case – booking then cancellation
+└ Start booking P-1003
+  POST http://localhost:8088/v2/process-instances [200 OK, 2.19kB, 75ms]
+  √  instance created
+  ┌
+  │ 'case3Key =', '2251799813685507'
+  └
+
+└ Booking is waiting for the appointment
+  POST http://localhost:8088/v2/element-instances/search [200 OK, 2.57kB, 105ms]
+  √  slot booked, confirmation sent, timer active
+
+└ Patient sends cancellation (message)
+  POST http://localhost:8088/v2/messages/correlation [200 OK, 2.07kB, 84ms]
+  √  correlated to the case 3 instance
+
+□ 4 Propagation comparison
+└ Start booking P-1004 (propagate ALL variables)
+  POST http://localhost:8088/v2/process-instances [200 OK, 2.21kB, 52ms]
+  √  instance created
+  ┌
+  │ 'propAllKey =', '2251799813685623'
+  └
+
+□ 5 Verify results
+└ Case 1 parent completed via booking path
+  POST http://localhost:8088/v2/variables/search [200 OK, 4.76kB, 61ms]
+  √  slotStatus AVAILABLE, BOOKED, confirmation SENT
+  √  child-only variables did not leak into the parent
+
+└ Case 1 parent state
+  GET http://localhost:8088/v2/process-instances/2251799813685377 [200 OK, 2.51kB, 27ms]
+  √  COMPLETED
+
+└ Case 1 child instance (called by Send confirmation)
+  POST http://localhost:8088/v2/process-instances/search [200 OK, 2.67kB, 57ms]
+  √  one completed send-notification child
+
+└ Case 1 child variables (propagation OFF)
+  POST http://localhost:8088/v2/variables/search [200 OK, 3.16kB, 13ms]
+  ┌
+  │ 'child variables (propagation OFF):', 'messageText, no
+  │ tificationStatus, recipientId, telegramMessageId'
+  └
+  √  child only sees recipientId + messageText (plus its own result)
+
+└ Case 2 parent took the FULL path
+  POST http://localhost:8088/v2/variables/search [200 OK, 4.08kB, 24ms]
+  √  slotStatus FULL, slot-full notice SENT, nothing booked
+
+└ Case 2 FULL end event reached
+  POST http://localhost:8088/v2/element-instances/search [200 OK, 2.59kB, 16ms]
+  √  Booking rejected (slot full) completed
+
+└ Case 3 cancellation path
+  POST http://localhost:8088/v2/variables/search [200 OK, 5.5kB, 15ms]
+  √  slot released, cancellation notice SENT
+
+└ Case 3 has two children (confirmation + cancellation)
+  POST http://localhost:8088/v2/process-instances/search [200 OK, 3.23kB, 14ms]
+  √  2 send-notification children
+
+└ Case 3 timer was interrupted
+  POST http://localhost:8088/v2/element-instances/search [200 OK, 2.6kB, 13ms]
+  √  timer TERMINATED by interrupting event subprocess
+
+└ Propagate-all child instance
+  POST http://localhost:8088/v2/process-instances/search [200 OK, 2.67kB, 43ms]
+
+└ Propagate-all child variables (propagation ON)
+  POST http://localhost:8088/v2/variables/search [200 OK, 5.56kB, 47ms]
+  ┌
+  │ 'child variables (propagation ON):', 'appointmentWaitT
+  │ ime, bookedCount, bookingRef, bookingStatus, departmen
+  │ t, messageText, notificationStatus, patientId, patient
+  │ Name, preferredSlot, recipientId, slotStatus, suggeste
+  │ dAction, telegramMessageId'
+  └
+  √  child received every parent variable
+
+└ Propagate-all parent got child variables back
+  POST http://localhost:8088/v2/variables/search [200 OK, 5.56kB, 18ms]
+  √  child result variables were copied back into the parent
+
+└ Telegram inbox received every notification
+  GET http://localhost:8090/messages [200 OK, 1.35kB, 15ms]
+  √  confirmation, slot-full, confirmation + cancellation, propagate-all confirmation
+
+┌─────────────────────────┬─────────────────────┬────────────────────┐
+│                         │            executed │             failed │
+├─────────────────────────┼─────────────────────┼────────────────────┤
+│              iterations │                   1 │                  0 │
+├─────────────────────────┼─────────────────────┼────────────────────┤
+│                requests │                  21 │                  0 │
+├─────────────────────────┼─────────────────────┼────────────────────┤
+│            test-scripts │                  21 │                  0 │
+├─────────────────────────┼─────────────────────┼────────────────────┤
+│      prerequest-scripts │                   2 │                  0 │
+├─────────────────────────┼─────────────────────┼────────────────────┤
+│              assertions │                  21 │                  0 │
+├─────────────────────────┴─────────────────────┴────────────────────┤
+│ total run duration: 42.2s                                          │
+├────────────────────────────────────────────────────────────────────┤
+│ total data received: 25.9kB (approx)                               │
+├────────────────────────────────────────────────────────────────────┤
+│ average response time: 121ms [min: 13ms, max: 1106ms, s.d.: 242ms] │
+└────────────────────────────────────────────────────────────────────┘
